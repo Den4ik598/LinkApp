@@ -4,11 +4,11 @@ import com.malkinfo.editingrecyclerview.model.ClassLink
 import java.net.URI
 
 class parsingurl {
-    fun fromUrl(urlString: String, id: Int): ClassLink {
-        val cleanUrlString = urlString.replace("Applink://", "")
+    fun fromUrl(urlString: String): ClassLink {
+        val cleanUrlString = urlString.replace("applink://", "")
         val url = URI(cleanUrlString)
-        val app_name = "LinkManager"
-        val UrlUUiD = urlString
+        val app_name = "applink"
+        val UrlUUiD = cleanUrlString
         val uuid = UrlUUiD.substringAfter("://").substringBefore("@")
         val protocol = url.scheme
         val ares = url.host
@@ -21,7 +21,7 @@ class parsingurl {
         val type = query.firstOrNull { it.startsWith("type=") }?.substringAfter("type=")
         val flow = query.firstOrNull { it.startsWith("flow=") }?.substringAfter("flow=")
         val country = url.fragment ?: ""
-        return ClassLink(id,protocol, app_name, uuid, ares, port, security ?: "", sni ?: "", public_key
+        return ClassLink(protocol, app_name, uuid, ares, port, security ?: "", sni ?: "", public_key
             ?: "", browser ?: "", type ?: "", flow ?: "", country)
     }
 }

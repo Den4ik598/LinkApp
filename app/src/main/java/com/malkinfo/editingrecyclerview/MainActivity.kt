@@ -1,5 +1,6 @@
 package com.malkinfo.editingrecyclerview
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -19,26 +20,20 @@ private const val LINKS_PREFS = "links_prefs"
 private const val LINKS_KEY = "links_key"
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var addsBtn:FloatingActionButton
-    private lateinit var rev:RecyclerView
+    private lateinit var addsBtn: FloatingActionButton
+    private lateinit var rev: RecyclerView
     private lateinit var userList:ArrayList<ClassLink>
     private lateinit var userAdapter:UserAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        /**set List*/
         userList = ArrayList()
-        /**set find Id*/
         addsBtn = findViewById(R.id.addingBtn)
         rev = findViewById(R.id.mRecycler)
-        /**set Adapter*/
         userAdapter = UserAdapter(this,userList,LINKS_PREFS)
-        /**setRecycler view Adapter*/
         rev.layoutManager = LinearLayoutManager(this)
         rev.adapter = userAdapter
-        /**set Dialog*/
         val linksJson = getSharedPreferences(LINKS_PREFS, MODE_PRIVATE).getString(LINKS_KEY, "")
         if (linksJson != null) {
             if (linksJson.isNotEmpty()) {
@@ -52,6 +47,13 @@ class MainActivity : AppCompatActivity() {
 
         addsBtn.setOnClickListener { addInfo() }
 
+        userAdapter.setOnItemClickListener { link ->
+            val intent = Intent(this, infoActivity::class.java)
+            intent.putExtra("Link", Gson().toJson(link))
+            startActivity(intent)
+        }
+
+
     }
 
 
@@ -60,20 +62,20 @@ class MainActivity : AppCompatActivity() {
         val parser = parsingurl()
         val inflater = LayoutInflater.from(this)
         val v = inflater.inflate(R.layout.add_item,null)
-        /**set view*/
+
         val Links = v.findViewById<EditText>(R.id.Link)
 
         val addDialog = AlertDialog.Builder(this)
 
         addDialog.setView(v)
         addDialog.setPositiveButton("Ok"){
-            dialog,_->
+                dialog,_->
             val Link = Links.text.toString()
 
             if (Link.isNotEmpty()){
                 try {
                     val id = userList.size + 1
-                    val linkParsing = parser.fromUrl(Link, id)
+                    val linkParsing = parser.fromUrl(Link)
                     userList.add(linkParsing)
                     userAdapter.notifyDataSetChanged()
 
@@ -82,25 +84,43 @@ class MainActivity : AppCompatActivity() {
                     editor.putString(LINKS_KEY, linksJson)
                     editor.apply()
 
-                    Toast.makeText(this,"Adding User Information Success",Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this,"Adding User Information Success", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
                 } catch (e: Exception){
-                    Toast.makeText(this,"Error occurred: ${e.message}",Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this,"Error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(this,"Cancel",Toast.LENGTH_SHORT).show()
+                Toast.makeText(this,"Cancel", Toast.LENGTH_SHORT).show()
             }
         }
         addDialog.setNegativeButton("Cancel"){
-            dialog,_->
+                dialog,_->
             dialog.dismiss()
-            Toast.makeText(this,"Cancel",Toast.LENGTH_SHORT).show()
+            Toast.makeText(this,"Cancel", Toast.LENGTH_SHORT).show()
 
         }
         addDialog.create()
         addDialog.show()
     }
     /**ok now run this */
+
+    override fun onResume(){
+        super.onResume()
+        val parser = parsingurl()
+        println("YEEEESSSS")
+        val data = intent.data
+        if(data != null){
+            val URLtoString = data.toString()
+            val LinkParsing = parser.fromUrl(URLtoString)
+            userList.add(LinkParsing)
+            userAdapter.notifyDataSetChanged()
+            val LinkJson = Gson().toJson(userList)
+            val editor = getSharedPreferences(LINKS_PREFS, MODE_PRIVATE).edit()
+            editor.putString(LINKS_KEY, LinkJson)
+            editor.apply()
+        }
+
+    }
 
 }
 

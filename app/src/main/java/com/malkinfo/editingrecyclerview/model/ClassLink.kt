@@ -1,7 +1,6 @@
 package com.malkinfo.editingrecyclerview.model
 
-data class ClassLink(
-    val Id: Int,
+data class ClassLink constructor(
     val Protocol: String,
     val Appname: String,
     val Uuid: String,
